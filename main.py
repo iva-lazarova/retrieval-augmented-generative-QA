@@ -70,6 +70,28 @@ def calculate_embeddings_cost(texts):
     return total_tokens, total_tokens / 1000 * 0.0004
 
 
+if __name__ == "__main__":
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    st.image("img.png")
+    st.subheader("Retrieval Augmented Generative QA")
+
+    with st.sidebar:
+        api_key = st.text_input("OpenAI API Key", type="password")
+        # If the user provides a key, load it in an environment variable
+        if api_key:
+            os.environ["OPENAI_API_KEY"] = api_key
+
+
+        uploaded_file = st.file_uploader("Upload a file:", type=["pdf", "docx", "txt"])
+
+        # Number input for chunk size
+        chunk_size = st.number_input("Chunk Size", min_value=100, max_value=2048, value=512)
+        k = st.number_input("k", min_value=1,max_value=20,value=3)
+
+        # File chunked and embedded and saved in vectorstore when user clicks button
+        add_data = st.button("Add data")
+
 
 
 
