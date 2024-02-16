@@ -1,7 +1,11 @@
 # What is this project about?
-This is a question-answering app for custom data built by using model inputs
-and embeddings-based search with the following stack: LangChain, OpenAI and 
-Chroma. Streamlit for the front-end. 
+
+This is a question-answering app that allows users to provide a large 
+language model(LLM) with custom data the LLM has not been trained on, so
+that it can perform Q&A based on that data. 
+
+It uses model inputs and embeddings-based search with the following stack: 
+LangChain, OpenAI and Chroma. Streamlit for the front-end.
 
 Pipeline:
 1. Prepare search data:

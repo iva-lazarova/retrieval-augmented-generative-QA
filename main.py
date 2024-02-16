@@ -44,7 +44,7 @@ def chunk_data(data, chunk_size=256, chunk_overlap=20):
 
 # Embed the chunks into vectorstore
 def create_embeddings(chunks):
-    embeddings = OpenAIEmbeddings
+    embeddings = OpenAIEmbeddings()
     vector_store = Chroma.from_documents(chunks, embeddings)
     return vector_store
 
@@ -82,15 +82,52 @@ if __name__ == "__main__":
         if api_key:
             os.environ["OPENAI_API_KEY"] = api_key
 
-
         uploaded_file = st.file_uploader("Upload a file:", type=["pdf", "docx", "txt"])
 
         # Number input for chunk size
         chunk_size = st.number_input("Chunk Size", min_value=100, max_value=2048, value=512)
-        k = st.number_input("k", min_value=1,max_value=20,value=3)
 
-        # File chunked and embedded and saved in vectorstore when user clicks button
+        # Number of most similar chunks used to assemble the final answer
+        k = st.number_input("k", min_value=1, max_value=20, value=3)
+
+        # File chunked, embedded, saved in vectorstore when user clicks button
         add_data = st.button("Add data")
+
+        if uploaded_file and add_data:
+            with st.spinner("Reading, chunking, and embedding file..."):
+                # Copy file from memory to disk locally
+                # Read file content in binary
+                bytes_data = uploaded_file.read()
+                file_name = os.path.join("./", uploaded_file.name)
+                with open(file_name, "wb") as f:
+                    f.write(bytes_data)
+
+                # Load document
+                data = load_document(file_name)
+                chunks = chunk_data(data, chunk_size=chunk_size)
+                st.write(f"Chunk_size: {chunk_size}, Chunks: {len(chunks)}")
+
+                # Display embeddings cost
+                tokens, embeddings_cost = calculate_embeddings_cost(chunks)
+                st.write(f"Embeddings cost: ${embeddings_cost:.4f}")
+
+                # Embed the chunks
+                vector_store = create_embeddings(chunks)
+
+                # Save the vector store in the streamlit session state
+                # To be persistent between reruns
+                st.session_state.vs = vector_store
+                st.success("File uploaded, chunked and embedded successfully!")
+
+    q = st.text_input("Ask a question about the content of your file")
+    # If user asks a question and vector store exists in the session state
+    # Load the vector store from the session state into a variable
+    if q:
+        if "vs" in st.session_state:
+            vector_store = st.session_state.vs
+            st.write(f"k:{k}")
+            answer = ask_and_get_answers(vector_store, q, k)
+            st.text_area("LLM Answer", value=answer)
 
 
 
