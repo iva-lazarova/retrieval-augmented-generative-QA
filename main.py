@@ -70,6 +70,12 @@ def calculate_embeddings_cost(texts):
     return total_tokens, total_tokens / 1000 * 0.0004
 
 
+def clear_history():
+    if "history" in st.session_state:
+        del st.session_state["history"]
+
+
+
 if __name__ == "__main__":
     openai_api_key = os.getenv("OPENAI_API_KEY")
 
@@ -85,13 +91,16 @@ if __name__ == "__main__":
         uploaded_file = st.file_uploader("Upload a file:", type=["pdf", "docx", "txt"])
 
         # Number input for chunk size
-        chunk_size = st.number_input("Chunk Size", min_value=100, max_value=2048, value=512)
+        chunk_size = st.number_input("Chunk Size",
+                                     min_value=100, max_value=2048,
+                                     value=512, on_change=clear_history)
 
         # Number of most similar chunks to be assembled for final answer
-        k = st.number_input("k", min_value=1, max_value=20, value=3)
+        k = st.number_input("k", min_value=1, max_value=20,
+                            value=3, on_change=clear_history)
 
         # File chunked, embedded, saved in vectorstore when user clicks button
-        add_data = st.button("Add data")
+        add_data = st.button("Add data", on_click=clear_history)
 
         if uploaded_file and add_data:
             with st.spinner("Reading, chunking, and embedding file..."):
@@ -129,18 +138,19 @@ if __name__ == "__main__":
             answer = ask_and_get_answers(vector_store, q, k)
             st.text_area("LLM Answer", value=answer)
 
-    st.divider()
-    # History corresponds to all previous questions and answers
-    # If the key not in session state, create it
-    if "history" not in st.session_state:
-        st.session_state.history = ""
-    # Concat current question and its answer
-    value = f" Q: {q} \n A:{answer}"
-    # Display latest question and answer before history
-    st.session_state.history = f"{value} \n {'-' *100} \n {st.session_state.history}"
-    # Take chat history from session state into a variable to display in text area
-    h = st.session_state.history
-    st.text_area(label="Chat History", velue=h, key="history", height=400)
+            st.divider()
+            # History corresponds to all previous questions and answers
+            # If the key not in session state, create it
+            if "history" not in st.session_state:
+                st.session_state.history = ""
+            # Concat current question and its answer
+
+            value = f'Q: {q} \nA: {answer}'
+            # Display latest question and answer before history
+            st.session_state.history = f"{value} \n {'-' * 100} \n {st.session_state.history}"
+            # Take chat history from session state into a variable to display in text area
+            h = st.session_state.history
+            st.text_area(label="Chat History", value=h, key="history", height=400)
 
 
 
