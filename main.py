@@ -87,7 +87,7 @@ if __name__ == "__main__":
         # Number input for chunk size
         chunk_size = st.number_input("Chunk Size", min_value=100, max_value=2048, value=512)
 
-        # Number of most similar chunks used to assemble the final answer
+        # Number of most similar chunks to be assembled for final answer
         k = st.number_input("k", min_value=1, max_value=20, value=3)
 
         # File chunked, embedded, saved in vectorstore when user clicks button
@@ -125,9 +125,24 @@ if __name__ == "__main__":
     if q:
         if "vs" in st.session_state:
             vector_store = st.session_state.vs
-            st.write(f"k:{k}")
+            #st.write(f"k:{k}")
             answer = ask_and_get_answers(vector_store, q, k)
             st.text_area("LLM Answer", value=answer)
+
+    st.divider()
+    # History corresponds to all previous questions and answers
+    # If the key not in session state, create it
+    if "history" not in st.session_state:
+        st.session_state.history = ""
+    # Concat current question and its answer
+    value = f" Q: {q} \n A:{answer}"
+    # Display latest question and answer before history
+    st.session_state.history = f"{value} \n {'-' *100} \n {st.session_state.history}"
+    # Take chat history from session state into a variable to display in text area
+    h = st.session_state.history
+    st.text_area(label="Chat History", velue=h, key="history", height=400)
+
+
 
 
 
